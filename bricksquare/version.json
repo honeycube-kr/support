@@ -1,7 +1,7 @@
 {
   "android": {
-    "latest": "1.3.0",
-    "min_supported": "1.3.0",
+    "latest": "1.2.3",
+    "min_supported": "1.2.3",
     "play_store_url": "market://details?id=net.honeycube.bricksquare",
     "web_store_url": "https://honeycube-kr.github.io/brick-square/"
   }
