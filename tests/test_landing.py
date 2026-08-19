@@ -13,12 +13,15 @@ import xml.etree.ElementTree as ET
 ROOT = Path(__file__).resolve().parents[1]
 PLAY_URL = (
     "https://play.google.com/store/apps/details?id=net.honeycube.bricksquare"
+    "&utm_source=honeycube&utm_medium=website&utm_campaign=brick_square"
 )
+ITCH_URL = "https://honeycubekr.itch.io/brick-square"
+ITCH_BADGE_URL = "/images/itch-io-badge-en.svg"
 YOUTUBE_URL = "https://youtu.be/6POI0gqNSKI"
 PRIVACY_URL = "/bricksquare/privacy_policy_en.html"
 CANONICAL_ORIGIN = "https://www.honeycube.net"
 CANONICAL_URLS = {
-    "/": f"{CANONICAL_ORIGIN}/",
+    "/play/": f"{CANONICAL_ORIGIN}/play/",
     "/bricksquare/privacy_policy_en.html": (
         f"{CANONICAL_ORIGIN}/bricksquare/privacy_policy_en.html"
     ),
@@ -39,10 +42,13 @@ class LandingParser(HTMLParser):
         self.iframes = []
         self.images = []
         self.links = []
+        self.metas = []
+        self.elements = []
         self.interactive_order = []
 
     def handle_starttag(self, tag, attrs):
         attributes = dict(attrs)
+        self.elements.append((tag, attributes))
         if tag == "html":
             self.html_attributes = attributes
         elif tag == "a":
@@ -55,6 +61,8 @@ class LandingParser(HTMLParser):
             self.images.append(attributes)
         elif tag == "link":
             self.links.append(attributes)
+        elif tag == "meta":
+            self.metas.append(attributes)
 
 
 class QuietHandler(SimpleHTTPRequestHandler):
@@ -71,7 +79,7 @@ class LandingPageTest(unittest.TestCase):
         cls.thread.start()
         cls.base_url = f"http://127.0.0.1:{cls.server.server_port}"
 
-        with urlopen(f"{cls.base_url}/", timeout=5) as response:
+        with urlopen(f"{cls.base_url}/play", timeout=5) as response:
             cls.status = response.status
             cls.html = response.read().decode("utf-8")
 
@@ -97,15 +105,16 @@ class LandingPageTest(unittest.TestCase):
         self.assertIn("Brick Square", self.html)
         self.assertIn("HoneyCube", self.html)
 
-    def test_prioritizes_the_google_play_link_before_video(self):
-        play_index = next(
-            (
-                index
-                for index, (tag, attrs) in enumerate(self.parser.interactive_order)
-                if tag == "a" and attrs.get("href") == PLAY_URL
-            ),
-            None,
-        )
+    def test_does_not_show_a_company_label_above_the_game_logo(self):
+        company_labels = [
+            (tag, attributes)
+            for tag, attributes in self.parser.elements
+            if "company" in attributes.get("class", "").split()
+        ]
+
+        self.assertEqual(company_labels, [])
+
+    def test_places_store_links_after_video(self):
         video_index = next(
             (
                 index
@@ -114,10 +123,15 @@ class LandingPageTest(unittest.TestCase):
             ),
             None,
         )
+        store_indexes = [
+            index
+            for index, (tag, attrs) in enumerate(self.parser.interactive_order)
+            if tag == "a" and attrs.get("href") in {PLAY_URL, ITCH_URL}
+        ]
 
-        self.assertIsNotNone(play_index)
         self.assertIsNotNone(video_index)
-        self.assertLess(play_index, video_index)
+        self.assertEqual(len(store_indexes), 2)
+        self.assertTrue(all(video_index < index for index in store_indexes))
 
     def test_embeds_the_uploaded_video_without_autoplay(self):
         self.assertEqual(len(self.parser.iframes), 1)
@@ -129,10 +143,45 @@ class LandingPageTest(unittest.TestCase):
         self.assertEqual(iframe.get("loading"), "lazy")
         self.assertNotIn("autoplay=1", iframe.get("src", ""))
 
-    def test_exposes_youtube_and_privacy_fallback_links(self):
+    def test_exposes_privacy_without_a_youtube_fallback_link(self):
         hrefs = {anchor.get("href") for anchor in self.parser.anchors}
-        self.assertIn(YOUTUBE_URL, hrefs)
         self.assertIn(PRIVACY_URL, hrefs)
+        self.assertNotIn(YOUTUBE_URL, hrefs)
+
+    def test_exposes_google_play_with_campaign_tracking_and_itch_badge(self):
+        anchors_by_href = {
+            anchor.get("href"): anchor for anchor in self.parser.anchors
+        }
+        self.assertIn(PLAY_URL, anchors_by_href)
+        self.assertIn(ITCH_URL, anchors_by_href)
+
+        itch_badges = [
+            image
+            for image in self.parser.images
+            if image.get("src") == ITCH_BADGE_URL
+        ]
+        self.assertEqual(len(itch_badges), 1)
+        self.assertEqual(itch_badges[0].get("alt"), "Download on itch.io")
+
+    def test_root_redirects_to_the_play_landing_page(self):
+        status, html = self.get("/")
+        parser = LandingParser()
+        parser.feed(html)
+
+        refreshes = [
+            meta.get("content")
+            for meta in parser.metas
+            if meta.get("http-equiv", "").lower() == "refresh"
+        ]
+        canonical_urls = [
+            link.get("href")
+            for link in parser.links
+            if link.get("rel") == "canonical"
+        ]
+
+        self.assertEqual(status, 200)
+        self.assertEqual(refreshes, ["0; url=/play/"])
+        self.assertEqual(canonical_urls, [f"{CANONICAL_ORIGIN}/play/"])
 
     def test_declares_self_canonical_urls(self):
         for path, expected_canonical in CANONICAL_URLS.items():
@@ -175,16 +224,19 @@ class LandingPageTest(unittest.TestCase):
         version = json.loads(version_json)
         self.assertEqual(
             version["android"]["web_store_url"],
-            f"{CANONICAL_ORIGIN}/",
+            f"{CANONICAL_ORIGIN}/play/",
         )
 
     def test_every_local_image_is_served(self):
-        sources = [image.get("src") for image in self.parser.images]
+        sources = [
+            image.get("src")
+            for image in self.parser.images
+            if image.get("src", "").startswith("/images/")
+        ]
         self.assertGreaterEqual(len(sources), 6)
 
         for source in sources:
-            self.assertTrue(source.startswith("images/"), source)
-            with urlopen(f"{self.base_url}/{source}", timeout=5) as response:
+            with urlopen(f"{self.base_url}{source}", timeout=5) as response:
                 self.assertEqual(response.status, 200, source)
                 self.assertGreater(int(response.headers["Content-Length"]), 0, source)
 

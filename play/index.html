@@ -1,0 +1,339 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#0b111a" />
+    <meta
+      name="description"
+      content="Rotate blocks, clear the 9×9 board, and take on Daily Puzzle and Survival modes in Brick Square."
+    />
+    <link rel="canonical" href="https://www.honeycube.net/play/" />
+    <title>Brick Square | HoneyCube</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        font-family:
+          Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+          "Segoe UI", sans-serif;
+        --page-background: #0b111a;
+        --panel-background: #121c28;
+        --text-primary: #ffffff;
+        --text-secondary: #b8c7d9;
+        --focus: #8fd0ff;
+        background: var(--page-background);
+        color: var(--text-primary);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html {
+        background: var(--page-background);
+      }
+
+      body {
+        position: relative;
+        margin: 0;
+        min-width: 320px;
+        min-height: 100vh;
+        overflow-x: hidden;
+        background:
+          radial-gradient(
+            circle at 12% 18%,
+            rgb(58 136 216 / 18%),
+            transparent 30rem
+          ),
+          radial-gradient(
+            circle at 88% 82%,
+            rgb(31 138 112 / 14%),
+            transparent 28rem
+          ),
+          var(--page-background);
+      }
+
+      img {
+        display: block;
+        max-width: 100%;
+      }
+
+      a {
+        color: inherit;
+      }
+
+      a:focus-visible {
+        outline: 4px solid var(--focus);
+        outline-offset: 5px;
+      }
+
+      .decorations {
+        position: fixed;
+        z-index: 0;
+        inset: 0;
+        overflow: hidden;
+        pointer-events: none;
+      }
+
+      .decoration {
+        position: absolute;
+        width: clamp(72px, 12vw, 150px);
+        opacity: 0.12;
+        filter: drop-shadow(0 18px 28px rgb(0 0 0 / 35%));
+      }
+
+      .decoration--red {
+        top: 8%;
+        left: -2.5rem;
+        transform: rotate(-14deg);
+      }
+
+      .decoration--yellow {
+        top: 4%;
+        right: -2rem;
+        transform: rotate(12deg);
+      }
+
+      .decoration--green {
+        bottom: 5%;
+        left: 4%;
+        transform: rotate(16deg);
+      }
+
+      .decoration--blue {
+        right: 3%;
+        bottom: -2rem;
+        transform: rotate(-11deg);
+      }
+
+      .landing {
+        position: relative;
+        z-index: 1;
+        display: flex;
+        width: min(720px, calc(100% - 32px));
+        margin: 0 auto;
+        padding: 48px 0 56px;
+        align-items: stretch;
+      }
+
+      .hero {
+        display: flex;
+        width: 100%;
+        flex-direction: column;
+        align-items: center;
+        gap: 40px;
+      }
+
+      .hero__copy {
+        display: flex;
+        min-width: 0;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+      }
+
+      .game-logo {
+        width: min(100%, 520px);
+        height: auto;
+      }
+
+      h1 {
+        margin: 28px 0 0;
+        font-size: clamp(2rem, 5vw, 2.75rem);
+        line-height: 1;
+        letter-spacing: -0.045em;
+      }
+
+      .hero__description {
+        max-width: 34rem;
+        margin: 14px 0 0;
+        color: var(--text-secondary);
+        font-size: clamp(1rem, 1.8vw, 1.2rem);
+        line-height: 1.6;
+      }
+
+      .store-links {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 14px;
+      }
+
+      .store-link {
+        display: inline-flex;
+        width: min(100%, 300px);
+        border-radius: 14px;
+        transition:
+          transform 140ms ease,
+          filter 140ms ease;
+      }
+
+      .store-link--itch {
+        width: min(100%, 208px);
+      }
+
+      .store-link:hover {
+        transform: translateY(-2px);
+        filter: drop-shadow(0 12px 24px rgb(0 0 0 / 35%));
+      }
+
+      .store-link img {
+        width: 100%;
+        height: auto;
+      }
+
+      .hero__media {
+        width: 100%;
+        max-width: 720px;
+        justify-self: center;
+        text-align: center;
+      }
+
+      .video-shell {
+        width: 100%;
+        aspect-ratio: 16 / 9;
+        overflow: hidden;
+        border: 1px solid rgb(143 208 255 / 22%);
+        border-radius: 24px;
+        background: var(--panel-background);
+        box-shadow: 0 26px 70px rgb(0 0 0 / 45%);
+      }
+
+      .video-shell iframe {
+        width: 100%;
+        height: 100%;
+        border: 0;
+      }
+
+      .site-footer {
+        position: relative;
+        z-index: 1;
+        display: flex;
+        justify-content: center;
+        gap: 18px;
+        padding: 0 16px 28px;
+        color: var(--text-secondary);
+        font-size: 0.8rem;
+      }
+
+      .site-footer a {
+        text-underline-offset: 3px;
+      }
+
+      @media (max-width: 480px) {
+        .landing {
+          width: min(100% - 24px, 720px);
+          padding: 24px 0 40px;
+        }
+
+        .video-shell {
+          border-radius: 16px;
+        }
+
+        .site-footer {
+          flex-direction: column;
+          align-items: center;
+          gap: 8px;
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .store-link {
+          transition: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="decorations" aria-hidden="true">
+      <img
+        class="decoration decoration--red"
+        src="/images/block-red.png"
+        alt=""
+      />
+      <img
+        class="decoration decoration--yellow"
+        src="/images/block-yellow.png"
+        alt=""
+      />
+      <img
+        class="decoration decoration--green"
+        src="/images/block-green.png"
+        alt=""
+      />
+      <img
+        class="decoration decoration--blue"
+        src="/images/block-blue.png"
+        alt=""
+      />
+    </div>
+
+    <main class="landing">
+      <section class="hero" aria-labelledby="hero-title">
+        <div class="hero__copy">
+          <img
+            class="game-logo"
+            src="/images/brick-square-logo.png"
+            alt="Brick Square"
+            width="1024"
+            height="535"
+          />
+          <h1 id="hero-title">Rotate. Clear. Keep Going.</h1>
+          <p class="hero__description">
+            A fresh 9×9 block puzzle every day.
+          </p>
+        </div>
+
+        <div class="hero__media">
+          <div class="video-shell">
+            <iframe
+              src="https://www.youtube.com/embed/6POI0gqNSKI?playsinline=1&amp;rel=0"
+              title="Brick Square gameplay video"
+              loading="lazy"
+              allow="encrypted-media; picture-in-picture; web-share"
+              referrerpolicy="strict-origin-when-cross-origin"
+              allowfullscreen
+            ></iframe>
+          </div>
+        </div>
+
+        <div class="store-links">
+          <a
+            class="store-link"
+            href="https://play.google.com/store/apps/details?id=net.honeycube.bricksquare&amp;utm_source=honeycube&amp;utm_medium=website&amp;utm_campaign=brick_square"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Get Brick Square on Google Play"
+          >
+            <img
+              src="/images/google-play-store-badge-en.svg"
+              alt="Get it on Google Play"
+            />
+          </a>
+          <a
+            class="store-link store-link--itch"
+            href="https://honeycubekr.itch.io/brick-square"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Download Brick Square on itch.io"
+          >
+            <img
+              src="/images/itch-io-badge-en.svg"
+              alt="Download on itch.io"
+            />
+          </a>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <span>© 2026 HoneyCube</span>
+      <a
+        href="/bricksquare/privacy_policy_en.html"
+        target="_blank"
+        rel="noopener noreferrer"
+        >Privacy Policy</a
+      >
+    </footer>
+  </body>
+</html>
