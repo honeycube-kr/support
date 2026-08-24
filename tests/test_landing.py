@@ -21,7 +21,7 @@ YOUTUBE_URL = "https://youtu.be/6POI0gqNSKI"
 PRIVACY_URL = "/bricksquare/privacy_policy_en.html"
 CANONICAL_ORIGIN = "https://www.honeycube.net"
 CANONICAL_URLS = {
-    "/play/": f"{CANONICAL_ORIGIN}/play/",
+    "/": f"{CANONICAL_ORIGIN}/",
     "/bricksquare/privacy_policy_en.html": (
         f"{CANONICAL_ORIGIN}/bricksquare/privacy_policy_en.html"
     ),
@@ -79,7 +79,7 @@ class LandingPageTest(unittest.TestCase):
         cls.thread.start()
         cls.base_url = f"http://127.0.0.1:{cls.server.server_port}"
 
-        with urlopen(f"{cls.base_url}/play", timeout=5) as response:
+        with urlopen(f"{cls.base_url}/", timeout=5) as response:
             cls.status = response.status
             cls.html = response.read().decode("utf-8")
 
@@ -163,25 +163,13 @@ class LandingPageTest(unittest.TestCase):
         self.assertEqual(len(itch_badges), 1)
         self.assertEqual(itch_badges[0].get("alt"), "Download on itch.io")
 
-    def test_root_redirects_to_the_play_landing_page(self):
-        status, html = self.get("/")
-        parser = LandingParser()
-        parser.feed(html)
+    def test_root_is_the_landing_page_without_a_redirect(self):
+        self.assertNotIn("http-equiv=\"refresh\"", self.html.lower())
+        self.assertIn("Rotate. Clear. Keep Going.", self.html)
 
-        refreshes = [
-            meta.get("content")
-            for meta in parser.metas
-            if meta.get("http-equiv", "").lower() == "refresh"
-        ]
-        canonical_urls = [
-            link.get("href")
-            for link in parser.links
-            if link.get("rel") == "canonical"
-        ]
-
-        self.assertEqual(status, 200)
-        self.assertEqual(refreshes, ["0; url=/play/"])
-        self.assertEqual(canonical_urls, [f"{CANONICAL_ORIGIN}/play/"])
+    def test_play_landing_path_is_removed(self):
+        status, _ = self.get("/play/")
+        self.assertEqual(status, 404)
 
     def test_declares_self_canonical_urls(self):
         for path, expected_canonical in CANONICAL_URLS.items():
@@ -224,7 +212,7 @@ class LandingPageTest(unittest.TestCase):
         version = json.loads(version_json)
         self.assertEqual(
             version["android"]["web_store_url"],
-            f"{CANONICAL_ORIGIN}/play/",
+            f"{CANONICAL_ORIGIN}/",
         )
 
     def test_every_local_image_is_served(self):
