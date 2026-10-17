@@ -32,6 +32,9 @@ CANONICAL_URLS = {
         f"{CANONICAL_ORIGIN}/bricksquare/privacy_policy_ja.html"
     ),
 }
+for locale in ("en", "ko", "ja"):
+    path = f"/bricksquare/toss/privacy_policy_{locale}.html"
+    CANONICAL_URLS[path] = f"{CANONICAL_ORIGIN}{path}"
 
 
 class LandingParser(HTMLParser):

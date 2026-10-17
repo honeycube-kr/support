@@ -1,6 +1,8 @@
-# Privacy Policy
+# Privacy Policy — General App
 
-Effective date: April 7, 2026
+Effective date: October 18, 2026
+
+This Policy applies to the standalone Brick Square app and web version used outside Toss. [Toss mini app privacy policy](/bricksquare/toss/privacy_policy_en.html)
 
 `Brick Square` (the "App") is operated by `HoneyCube` (the "Operator"). The Operator values user privacy and complies with applicable privacy laws. This Privacy Policy explains what information the App processes, why it is used, and what data may be transmitted to external services.
 
@@ -23,7 +25,8 @@ The App may process the following information.
 
 ### 1. Identifiers and Session Information
 
-- Installation identifier (`brick_id`)
+- Analytics user identifier (`brick_id`, using the installation identifier stored on the device in the general app)
+- Installation identifier (`install_id`)
 - App session identifier
 - Play session identifier
 
@@ -94,11 +97,11 @@ The Operator processes personal information only within the scope permitted by a
 
 ## Article 6. Overseas Transfer of Personal Information
 
-Some external services linked to the App may operate through overseas infrastructure. For example, the App may use a United States region for the PostHog host.
+External services linked to the App may operate through overseas infrastructure. The current primary Supabase region is Singapore. PostHog is accessed through a separate collection address, and information may be processed in the United States and other operating regions of external service providers.
 
 - Transferred items: identifiers, session information, app and device environment information, game usage events, error and diagnostic information
 - Purpose of transfer: product analytics, error tracking, service operation, and quality improvement
-- Countries of transfer: United States and other operating regions of external service providers
+- Countries of transfer: Singapore (primary Supabase region), United States and other operating regions of external service providers
 
 When overseas transfer occurs, the Operator will provide required notices and safeguards according to applicable laws and service operation policies.
 
