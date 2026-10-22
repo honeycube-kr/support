@@ -168,8 +168,17 @@
           filter 140ms ease;
       }
 
-      .store-link--itch {
-        width: min(100%, 208px);
+      .store-link--web {
+        min-height: 60px;
+        padding: 16px 24px;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid var(--focus);
+        background: var(--panel-background);
+        color: var(--text-primary);
+        font-size: 1.125rem;
+        font-weight: 700;
+        text-decoration: none;
       }
 
       .store-link:hover {
@@ -311,16 +320,13 @@
             />
           </a>
           <a
-            class="store-link store-link--itch"
-            href="https://honeycubekr.itch.io/brick-square"
+            class="store-link store-link--web"
+            href="https://bricksquare.honeycube.net/"
             target="_blank"
             rel="noopener noreferrer"
-            aria-label="Download Brick Square on itch.io"
+            aria-label="Play Brick Square in your browser"
           >
-            <img
-              src="/images/itch-io-badge-en.svg"
-              alt="Download on itch.io"
-            />
+            Play in Browser
           </a>
         </div>
       </section>

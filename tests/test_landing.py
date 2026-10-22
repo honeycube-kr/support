@@ -15,8 +15,7 @@ PLAY_URL = (
     "https://play.google.com/store/apps/details?id=net.honeycube.bricksquare"
     "&utm_source=honeycube&utm_medium=website&utm_campaign=brick_square"
 )
-ITCH_URL = "https://honeycubekr.itch.io/brick-square"
-ITCH_BADGE_URL = "/images/itch-io-badge-en.svg"
+WEB_PLAY_URL = "https://bricksquare.honeycube.net/"
 YOUTUBE_URL = "https://youtu.be/6POI0gqNSKI"
 PRIVACY_URL = "/bricksquare/privacy_policy_en.html"
 CANONICAL_ORIGIN = "https://www.honeycube.net"
@@ -129,7 +128,7 @@ class LandingPageTest(unittest.TestCase):
         store_indexes = [
             index
             for index, (tag, attrs) in enumerate(self.parser.interactive_order)
-            if tag == "a" and attrs.get("href") in {PLAY_URL, ITCH_URL}
+            if tag == "a" and attrs.get("href") in {PLAY_URL, WEB_PLAY_URL}
         ]
 
         self.assertIsNotNone(video_index)
@@ -151,20 +150,19 @@ class LandingPageTest(unittest.TestCase):
         self.assertIn(PRIVACY_URL, hrefs)
         self.assertNotIn(YOUTUBE_URL, hrefs)
 
-    def test_exposes_google_play_with_campaign_tracking_and_itch_badge(self):
+    def test_exposes_google_play_with_campaign_tracking_and_browser_play(self):
         anchors_by_href = {
             anchor.get("href"): anchor for anchor in self.parser.anchors
         }
         self.assertIn(PLAY_URL, anchors_by_href)
-        self.assertIn(ITCH_URL, anchors_by_href)
-
-        itch_badges = [
-            image
-            for image in self.parser.images
-            if image.get("src") == ITCH_BADGE_URL
-        ]
-        self.assertEqual(len(itch_badges), 1)
-        self.assertEqual(itch_badges[0].get("alt"), "Download on itch.io")
+        self.assertIn(WEB_PLAY_URL, anchors_by_href)
+        web_play = anchors_by_href[WEB_PLAY_URL]
+        self.assertEqual(web_play.get("target"), "_blank")
+        self.assertEqual(set(web_play.get("rel", "").split()), {"noopener", "noreferrer"})
+        self.assertEqual(web_play.get("aria-label"), "Play Brick Square in your browser")
+        self.assertIn("Play in Browser", self.html)
+        self.assertNotIn("itch.io", self.html)
+        self.assertNotIn("itch-io", self.html)
 
     def test_root_is_the_landing_page_without_a_redirect(self):
         self.assertNotIn("http-equiv=\"refresh\"", self.html.lower())
