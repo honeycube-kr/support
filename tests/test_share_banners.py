@@ -1,9 +1,8 @@
 from pathlib import Path
-import hashlib
 import struct
 import unittest
 
-ROOT = Path(__file__).resolve().parents[1] / "images/share/v1"
+ROOT = Path(__file__).resolve().parents[1] / "images/share"
 
 
 def jpeg_size(data):
@@ -25,26 +24,13 @@ def jpeg_size(data):
 
 class ShareBannerTest(unittest.TestCase):
     def test_single_common_banner_for_all_modes_and_languages(self):
-        current = ROOT.parent / "v2"
-        self.assertEqual({p.relative_to(current).as_posix() for p in current.rglob("*.jpg")}, {"common.jpg"})
+        current = ROOT / "v2"
+        self.assertEqual({p.relative_to(ROOT).as_posix() for p in ROOT.rglob("*.jpg")}, {"v2/common.jpg"})
         data = (current / "common.jpg").read_bytes()
         self.assertEqual(jpeg_size(data), (1200, 630))
         self.assertLessEqual(len(data), 200000)
         self.assertTrue(data.endswith(b"\xff\xd9"))
 
-    def test_nine_versioned_jpeg_banners(self):
-        expected = {f"{lang}/{mode}.jpg" for lang in ("ko", "en", "ja")
-                    for mode in ("stage", "daily", "survival")}
-        self.assertEqual({p.relative_to(ROOT).as_posix() for p in ROOT.rglob("*.jpg")}, expected)
-        hashes = set()
-        for relative in sorted(expected):
-            with self.subTest(banner=relative):
-                data = (ROOT / relative).read_bytes()
-                self.assertEqual(jpeg_size(data), (1200, 630))
-                self.assertLessEqual(len(data), 200000)
-                self.assertTrue(data.endswith(b"\xff\xd9"))
-                hashes.add(hashlib.sha256(data).hexdigest())
-        self.assertEqual(len(hashes), 9)
 
 
 if __name__ == "__main__":

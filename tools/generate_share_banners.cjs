@@ -1,6 +1,6 @@
 // 로컬 전용. 기존 게임 PNG로 모드/언어 텍스트 없는 공통 v2 JPG 한 장을 생성한다.
 // node tools/generate_share_banners.cjs GAME_CHECKOUT RUNTIME_NODE_MODULES
-// 이미 생성된 파일은 불변이다. v1 9종은 이력으로 보존하고 덮어쓰지 않는다.
+// 이미 생성된 파일은 불변이며 덮어쓰지 않는다.
 const fs = require('node:fs');
 const path = require('node:path');
 const {createRequire} = require('node:module');
