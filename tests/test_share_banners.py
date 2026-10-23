@@ -24,6 +24,14 @@ def jpeg_size(data):
 
 
 class ShareBannerTest(unittest.TestCase):
+    def test_single_common_banner_for_all_modes_and_languages(self):
+        current = ROOT.parent / "v2"
+        self.assertEqual({p.relative_to(current).as_posix() for p in current.rglob("*.jpg")}, {"common.jpg"})
+        data = (current / "common.jpg").read_bytes()
+        self.assertEqual(jpeg_size(data), (1200, 630))
+        self.assertLessEqual(len(data), 200000)
+        self.assertTrue(data.endswith(b"\xff\xd9"))
+
     def test_nine_versioned_jpeg_banners(self):
         expected = {f"{lang}/{mode}.jpg" for lang in ("ko", "en", "ja")
                     for mode in ("stage", "daily", "survival")}
